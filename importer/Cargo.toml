@@ -1,0 +1,18 @@
+[package]
+name = "site-chat-import"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Import reviewed website excerpts for Site Chat with Selenium"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+rmcp = { version = "3.11", default-features = false, features = ["server", "macros", "transport-io", "schemars"] }
+schemars = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+thirtyfour = { version = "0.38", default-features = false, features = ["reqwest"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std", "sync"] }
+url = "2"
