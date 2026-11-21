@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FairInfer Site Chat Demo</title>
+  <script type="module" src="./site-chat/site-chat.mjs"></script>
+  <style>
+    body { max-width: 42rem; margin: 0 auto; padding: 2rem 1.25rem 6rem; font: 1rem/1.55 system-ui, sans-serif; color: #232a2d; background: #f8faf9; }
+    h1 { line-height: 1.2; }
+    a { color: #075745; }
+    section { margin-block: 2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FairInfer Site Chat</h1>
+    <p>Try an excerpt search over the sample Harbor Tool Library. Open the chat and ask “What do I pay for weekday admission?”</p>
+    <p><a href="https://github.com/taylorparsons/fairinfer-chat">Source and install guide</a></p>
+  </header>
+  <main>
+    <section aria-labelledby="passes">
+      <h2 id="passes">Day passes</h2>
+      <p>Day passes cost $18 on weekdays. Day passes cost $22 on weekends.</p>
+    </section>
+    <section aria-labelledby="camping">
+      <h2 id="camping">Camping rentals</h2>
+      <p>Camping rentals require a membership.</p>
+    </section>
+  </main>
+  <site-chat title="Ask the tool library" accent="#075745" knowledge="./knowledge.json" excerpt-only></site-chat>
+</body>
+</html>

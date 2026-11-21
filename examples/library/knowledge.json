@@ -1,6 +1,12 @@
 {
   "version": 1,
   "starters": ["How much is a day pass?"],
+  "aliases": {
+    "admission": "day pass",
+    "what do i pay for": "how much is",
+    "need to be a member": "require membership",
+    "rent camping gear": "camping rentals"
+  },
   "sources": [
     {"id": "passes", "title": "Day passes", "path": "./#passes", "text": "Day passes cost $18 on weekdays. Day passes cost $22 on weekends."},
     {"id": "camping", "title": "Camping rentals", "path": "./#camping", "text": "Camping rentals require a membership."}

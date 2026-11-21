@@ -1,4 +1,4 @@
-import { modelExcerpt, normalizeKnowledge, publicLink, rankExcerpts } from './site-retrieval.mjs';
+import { modelExcerpt, normalizeKnowledge, publicLink } from './site-retrieval.mjs';
 
 const files = new URL('./', import.meta.url);
 const unavailable = 'Excerpt search is available.';
@@ -85,12 +85,15 @@ class SiteChat extends HTMLElement {
     const footer = add(panel, 'footer');
     const local = button(footer, 'Enable local Gemma');
     local.title = 'Uses about 399 MB of model and runtime files the first time';
-    const status = add(footer, 'p', 'Search published excerpts. Optional Gemma uses about 399 MB on first load.');
+    const excerptOnly = this.hasAttribute('excerpt-only');
+    const status = add(footer, 'p', excerptOnly ? 'Search published excerpts.'
+      : 'Search published excerpts. Optional Gemma uses about 399 MB on first load.');
     status.setAttribute('role', 'status');
     const contact = publicLink(this.getAttribute('contact'), document.baseURI);
     if (contact) add(footer, 'a', this.getAttribute('contact-label') || 'Contact').href = contact.href;
     const terms = add(footer, 'a', 'Gemma terms');
     terms.href = new URL('assets/gemma-TERMS.txt', files).href;
+    local.hidden = terms.hidden = excerptOnly;
 
     this.#ui = { log, starters, send, local, status };
     launcher.addEventListener('click', () => {
@@ -119,7 +122,9 @@ class SiteChat extends HTMLElement {
       if (this.#worker) this.#stop(unavailable);
       else this.#start();
     });
-    if (!globalThis.isSecureContext || !navigator.gpu || !('caches' in globalThis) || !('Worker' in globalThis)) {
+    if (excerptOnly) {
+      local.disabled = true;
+    } else if (!globalThis.isSecureContext || !navigator.gpu || !('caches' in globalThis) || !('Worker' in globalThis)) {
       local.disabled = true;
       status.textContent = 'WebGPU is unavailable. Search published excerpts.';
     }
@@ -160,8 +165,8 @@ class SiteChat extends HTMLElement {
     const reply = add(log, 'p', 'Looking up published excerpts…');
     log.scrollTop = log.scrollHeight;
     try {
-      const { sources } = await this.#loadKnowledge();
-      const candidates = rankExcerpts(question, sources);
+      const { search } = await this.#loadKnowledge();
+      const candidates = search(question);
       if (!candidates.length || !this.#ready) {
         this.#finish({ reply, candidates });
         return;
@@ -181,10 +186,12 @@ class SiteChat extends HTMLElement {
 
   #finish(request, viaModel = false) {
     const { reply, candidates, output } = request;
-    const choice = viaModel && modelExcerpt(output, candidates);
-    const result = choice || candidates[0];
+    const choice = viaModel ? modelExcerpt(output, candidates) : undefined;
+    const result = choice === undefined ? candidates[0] : choice;
     reply.textContent = result?.text ?? missing;
-    if (result) {
+    if (choice === null) {
+      reply.dataset.mode = 'gemma-declined';
+    } else if (result) {
       add(reply, 'a', result.source.title).href = result.source.path;
       reply.dataset.mode = choice ? 'gemma-selected' : viaModel ? 'gemma-fallback' : 'excerpt';
     }
