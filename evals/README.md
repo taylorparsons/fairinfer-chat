@@ -22,6 +22,8 @@ Use a ChromeDriver matching the installed Chrome. For an alternate Chrome instal
 
 - Configured branding, accent, contact route, sourced answers, and an unsupported question on both sites.
 - Zero requests for model or runtime files until visitor opt-in. The optional Gemma run requires a real warmup and completed generation, verifies the expected citation, and prints whether Gemma selected an allowed ID or the excerpt fallback answered.
+- Model scope probes run with the real WebGPU worker warmed up. A browser-side counter verifies that an unrelated creative request and a pricing instruction override generate zero answer messages.
+- A separate synthetic worker completion claims a fabricated price and includes markup after a valid-looking ID. The widget presents only the original cited excerpt.
 - Excerpt answers with missing model files and with WebGPU disabled for the test.
 - CLI imports give byte-identical outputs on repeat runs, include the studio's JavaScript-rendered heading, and exclude hidden text, forms, and footer content.
 - A redirect outside the approved URL fails export. The two destinations run on separate loopback origins so the check measures both export rejection and browser navigation.
@@ -43,6 +45,7 @@ python3 scripts/git_checks.py audit
 | Sitemap conversion tests | 2 passed |
 | Browser | Chrome 158.0.8127.37, two nested installations on separate synthetic sites |
 | Gemma | WebGPU warmup and one real generation completed. The result fell outside the approved ID format. The widget showed the approved excerpt and correct citation. |
+| Model scope | Two unsupported probes produced zero answer messages. A separate synthetic completion with a fabricated price and markup was discarded. |
 | Excerpt fallback | Passed with missing model files and with the WebGPU API disabled in the test. |
 | Importer | Three visible sections from each site. Repeat output matched byte for byte, and CLI and MCP output matched on the studio site. |
 | Dependency review | 176 versions checked. One upstream maintenance advisory remained after upgrading the MCP SDK. |

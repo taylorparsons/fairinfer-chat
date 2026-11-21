@@ -10,6 +10,8 @@ The optional Rust companion uses Selenium's WebDriver stack to render and extrac
 
 ## Evaluate the release
 
+Read the [v0.1.0 release notes](RELEASE-NOTES.md) for the install and verification summary.
+
 Run `node --test evals/grounding.test.mjs` for the deterministic grounding checks and `cargo test --locked --manifest-path importer/Cargo.toml` for the importer policy checks. The [browser eval guide and results](evals/README.md) cover ZIP installs, CLI and MCP extraction, and real WebGPU inference. See the [security review](SECURITY-REVIEW.md) and [reporting policy](SECURITY.md).
 
 ## Run the original FairInfer demo
