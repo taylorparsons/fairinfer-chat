@@ -24,6 +24,23 @@ function words(value) {
     .map(token => token.length > 4 ? token.replace(/(?:sses|[cs]hes)$/, match => match.slice(0, -2)).replace(/(?<!s)s$/, '') : token));
 }
 
+function queryRewriter(aliases) {
+  if (!aliases || typeof aliases !== 'object' || Array.isArray(aliases)) return question => question;
+  const phrase = /^[\p{L}\p{M}\p{N}]+(?: [\p{L}\p{M}\p{N}]+)*$/u;
+  const normalize = value => value.toLowerCase().trim().replace(/\s+/gu, ' ');
+  const replacements = new Map();
+  for (const [from, to] of Object.entries(aliases).slice(0, 64)) {
+    if (from.length > 80 || typeof to !== 'string' || to.length > 80) continue;
+    const alias = normalize(from);
+    const replacement = normalize(to);
+    if (phrase.test(alias) && phrase.test(replacement)) replacements.set(alias, replacement);
+  }
+  if (!replacements.size) return question => question;
+  const alternatives = [...replacements.keys()].sort((a, b) => b.length - a.length).join('|');
+  const pattern = new RegExp(`(?<![\\p{L}\\p{M}\\p{N}])(?:${alternatives})(?![\\p{L}\\p{M}\\p{N}])`, 'gu');
+  return question => normalize(question).replace(pattern, match => replacements.get(match));
+}
+
 export function publicLink(value, base) {
   if (typeof value !== 'string' || !value.trim()) return null;
   try {
@@ -50,31 +67,45 @@ export function normalizeKnowledge(data, base) {
   const starters = Array.isArray(data.starters)
     ? data.starters.filter(text => typeof text === 'string' && text.trim()).slice(0, 4).map(text => text.slice(0, 160))
     : [];
-  return { sources, starters };
+  const index = indexExcerpts(sources);
+  const rewrite = queryRewriter(data.aliases);
+  const search = question => rankIndexedExcerpts(rewrite(question), index, question);
+  return { sources, starters, search };
 }
 
-export function rankExcerpts(question, sources) {
-  const kind = factTypes.find(rule => rule.question.test(question));
+function indexExcerpts(sources) {
+  return sources.flatMap(source => {
+    const title = words(source.title);
+    return source.text.split(/(?<=[.!?])\s+|\n+/u).map(excerpt => excerpt.trim())
+      .filter(text => text && text.length <= 550)
+      .map(text => ({ source, text, title, body: words(text) }));
+  });
+}
+
+function rankIndexedExcerpts(question, index, original = question) {
+  const kind = factTypes.find(rule => rule.question.test(original))
+    ?? factTypes.find(rule => rule.question.test(question));
   const terms = [...words(question)].filter(term => !kind?.terms.test(term));
   if (!terms.length) return [];
   const candidates = [];
-  for (const source of sources) {
-    const title = words(source.title);
-    for (const excerpt of source.text.split(/(?<=[.!?])\s+|\n+/u)) {
-      const text = excerpt.trim();
-      if (!text || text.length > 550 || (kind && !kind.evidence.test(text))) continue;
-      const body = words(text);
-      const direct = terms.filter(term => body.has(term)).length;
-      const matched = terms.filter(term => body.has(term) || title.has(term)).length;
-      const required = kind ? terms.length : Math.ceil(terms.length * 0.75);
-      if (matched >= required && direct) candidates.push({ source, text, score: matched + direct * 2 });
-    }
+  const required = kind ? terms.length : Math.ceil(terms.length * 0.75);
+  for (const { source, text, title, body } of index) {
+    if (kind && !kind.evidence.test(text)) continue;
+    const direct = terms.filter(term => body.has(term)).length;
+    const matched = terms.filter(term => body.has(term) || title.has(term)).length;
+    if (matched >= required && direct) candidates.push({ source, text, score: matched + direct * 2 });
   }
   candidates.sort((a, b) => b.score - a.score);
   return candidates.filter(item => item.score >= candidates[0].score - 1).slice(0, 3);
 }
 
+export function rankExcerpts(question, sources) {
+  return rankIndexedExcerpts(question, indexExcerpts(sources));
+}
+
 export function modelExcerpt(output, candidates) {
-  const match = /^S([1-3])\.?$/.exec(String(output).trim());
+  const text = String(output).trim();
+  if (text === 'NONE') return null;
+  const match = /^S([1-3])\.?$/.exec(text);
   return match ? candidates[Number(match[1]) - 1] : undefined;
 }
