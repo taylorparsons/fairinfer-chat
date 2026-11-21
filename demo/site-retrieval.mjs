@@ -6,8 +6,12 @@ const factTypes = [
     terms: /^(?:price|cost|fee|rate)$/, evidence: /[$€£]\s?\d|\b\d+(?:\.\d+)?\s(?:dollars?|euros?|pounds?)\b|\bfree\b/i },
   { question: /\bhow long\b|\bduration\b/i,
     terms: /^(?:long|duration)$/, evidence: /\b\d+(?:\.\d+)?\s*(?:minutes?|hours?|days?|weeks?|months?|years?)\b/i },
-  { question: /\b(?:how many|how often)\b/i,
-    terms: /^often$/, evidence: /\b(?:\d+|once|twice|zero|one|two|three|four|five|six|seven|eight|nine|ten)\b/i },
+  { question: /\bhow many\b/i,
+    terms: /^number$/, evidence: /\b(?:\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+(?!(?:minutes?|hours?|days?|weeks?|months?|years?|dollars?)\b)[\p{L}]+/iu },
+  { question: /\bhow often\b/i,
+    terms: /^often$/, evidence: /\b(?:daily|weekly|monthly|annually|every|once|twice|per)\b/i },
+  { question: /^\s*where\b/i,
+    terms: /^location$/, evidence: /\b(?:located|address|room|lobby|courtyard|floor|entrance|street|avenue|building|gate)\b/i },
   { question: /\bwhat time\b|\b(?:opening|closing|open|close) hours\b/i,
     terms: /^(?:time|hour)$/, evidence: /\b(?:\d{1,2}:\d{2}|\d{1,2}\s*[ap]\.?m\.?|noon|midnight|closed)\b/i },
   { question: /\b(?:what date|when (?:is|does|will))\b/i,
@@ -70,7 +74,7 @@ export function rankExcerpts(question, sources) {
   return candidates.filter(item => item.score >= candidates[0].score - 1).slice(0, 3);
 }
 
-export function selectExcerpt(output, candidates) {
-  const match = /^S([1-3])$/.exec(String(output).trim());
-  return (match && candidates[Number(match[1]) - 1]) || candidates[0];
+export function modelExcerpt(output, candidates) {
+  const match = /^S([1-3])\.?$/.exec(String(output).trim());
+  return match ? candidates[Number(match[1]) - 1] : undefined;
 }

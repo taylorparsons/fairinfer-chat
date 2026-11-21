@@ -14,7 +14,6 @@ FILES = {
     "demo/site-chat.mjs": "site-chat.mjs",
     "demo/site-chat.css": "site-chat.css",
     "demo/site-retrieval.mjs": "site-retrieval.mjs",
-    "examples/library/knowledge.json": "knowledge.json",
 }
 for name in (
     "gemma-worker.js", "model-release.json", "gemma-TERMS.txt", "Gemma-Notice.txt",

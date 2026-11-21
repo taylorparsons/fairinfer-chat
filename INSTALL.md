@@ -1,6 +1,6 @@
 # Install Site Chat
 
-Unpack the release. Copy the `site-chat` directory into your site's static files, then replace its sample `knowledge.json` with approved content from your site. Add this to each page that should have chat.
+Unpack the release. Copy the `site-chat` directory into your site's static files, then create a `knowledge.json` file with approved content from your site. Add this to each page that should have chat.
 
 ~~~html
 <script type="module" src="/components/site-chat/site-chat.mjs"></script>
@@ -13,7 +13,7 @@ Unpack the release. Copy the `site-chat` directory into your site's static files
 ></site-chat>
 ~~~
 
-Change both paths if you install into a different directory. The widget loads its CSS, worker and runtime files relative to the module. `knowledge` defaults to `knowledge.json` next to the module. You can host a different knowledge file on another path on the same origin. Relative citation URLs resolve against the knowledge file's URL. The default sample contains synthetic library content.
+Change both paths if you install into a different directory. The widget loads its CSS, worker and runtime files relative to the module. `knowledge` defaults to `knowledge.json` next to the module. You can host a different knowledge file on another path on the same origin. Relative citation URLs resolve against the knowledge file's URL.
 
 ~~~json
 {
@@ -38,6 +38,6 @@ Excerpt search works as soon as the knowledge file loads. To make Gemma availabl
 python3 components/site-chat/setup.py provision --directory components/site-chat
 ~~~
 
-A visitor starts the roughly 399 MB browser load by selecting **Enable local Gemma**. The widget keeps excerpt search available when WebGPU or model files are unavailable. It sends search and optional model input to local code. It does not have a hosted inference endpoint.
+A visitor starts the roughly 399 MB browser load by selecting **Enable local Gemma**. The widget keeps excerpt search available when WebGPU or model files are unavailable. Prompts stay in page memory and the local browser worker.
 
 The original widget code is MIT. Redistributing any other components follows their included terms and notices. Some static hosts limit file size below the 323 MB weight file. Use a static origin that can serve that file or deploy excerpt search by itself.

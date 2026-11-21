@@ -1,8 +1,18 @@
-# FairInfer chat
+# Site Chat
 
-A browser-local chat widget first built for FairInfer’s staging website. The demo can answer questions from a reviewed snapshot of FairInfer’s published work, cite excerpts, and generate short drafts on the device.
+A self-hosted web component for asking about approved website content. It shows cited excerpts on its own and can use Google Gemma on the visitor's device. It grew out of FairInfer's staging chat.
 
-## Run the demo
+Download the [versioned install ZIP](https://github.com/taylorparsons/fairinfer-chat/releases/latest), follow the [installation guide](INSTALL.md), and point the widget at your site's reviewed JSON. The checked-in [tool library](examples/library/) and [studio tours](examples/studio/) examples use the same widget with separate content, labels, and colors.
+
+## Import knowledge with Selenium
+
+The optional Rust companion uses Selenium's WebDriver stack to render and extract approved pages. It follows the local Chrome automation approach of [Taylor's Rust Selenium MCP](https://github.com/taylorparsons/selenium-mcp) and provides a dedicated `read_page` tool. Use the [import guide](importer/README.md) for its CLI and MCP configuration. You can also prepare the JSON by hand.
+
+## Evaluate the release
+
+Run `node --test evals/grounding.test.mjs` for the deterministic grounding checks and `cargo test --locked --manifest-path importer/Cargo.toml` for the importer policy checks. The [browser eval guide and results](evals/README.md) cover ZIP installs, CLI and MCP extraction, and real WebGPU inference. See the [security review](SECURITY-REVIEW.md) and [reporting policy](SECURITY.md).
+
+## Run the original FairInfer demo
 
 Use Python 3.11 or later and a browser with a working WebGPU adapter. Review the [Gemma Terms of Use](demo/assets/gemma-TERMS.txt) before downloading the model. The first provision downloads about 399 MB of pinned model and runtime files. Keep room for another copy in browser Cache Storage.
 
@@ -20,7 +30,7 @@ Open [the local demo with startup status](http://127.0.0.1:8787/?chat-debug=1). 
 1. The original site used a Rust build to extract approved Home, Work, and chat documentation sections and to add a reviewed project cache. [The resulting knowledge snapshot](demo/assets/knowledge.json) ships with this demo. The page renders the snapshot locally so readers can follow citations to the exact reference text.
 2. [The browser worker](demo/assets/gemma-worker.js) loads the q4 ONNX build of Google Gemma 3 270M IT through Transformers.js and ONNX Runtime Web. [The manifest](demo/assets/model-release.json) pins the model revision, byte counts, and SHA-256 hashes. The provisioner verifies downloaded files, and the worker verifies the browser’s same-origin cache before loading and warming up the model.
 3. [The widget controller](demo/assets/assistant.js) passes a bounded set of excerpts into the worker. [The retrieval module](demo/assets/retrieval.js) resolves factual replies against approved text and renders source links. The browser streams creative and rewrite requests as labeled drafts. The conversation stays in page memory, and prompts go to the browser worker.
-4. This extraction uses the browser code and knowledge bundle from the staging checkout at `5e3e1a6bf616e0d380d12dab9611f39042d3a386`. The standalone HTML embeds the original widget and links to FairInfer’s public contact options. A loopback Python server replaces the website host for local development.
+4. The original extraction uses the browser code and knowledge bundle from the staging checkout at `5e3e1a6bf616e0d380d12dab9611f39042d3a386`. The standalone HTML embeds the original widget and links to FairInfer’s public contact options. A loopback Python server replaces the website host for local development.
 
 ## Licenses
 

@@ -1,4 +1,4 @@
-import { normalizeKnowledge, publicLink, rankExcerpts, selectExcerpt } from './site-retrieval.mjs';
+import { modelExcerpt, normalizeKnowledge, publicLink, rankExcerpts } from './site-retrieval.mjs';
 
 const files = new URL('./', import.meta.url);
 const unavailable = 'Excerpt search is available.';
@@ -85,7 +85,7 @@ class SiteChat extends HTMLElement {
     const footer = add(panel, 'footer');
     const local = button(footer, 'Enable local Gemma');
     local.title = 'Uses about 399 MB of model and runtime files the first time';
-    const status = add(footer, 'p', 'Search published excerpts. Local Gemma is optional.');
+    const status = add(footer, 'p', 'Search published excerpts. Optional Gemma uses about 399 MB on first load.');
     status.setAttribute('role', 'status');
     const contact = publicLink(this.getAttribute('contact'), document.baseURI);
     if (contact) add(footer, 'a', this.getAttribute('contact-label') || 'Contact').href = contact.href;
@@ -169,7 +169,7 @@ class SiteChat extends HTMLElement {
       this.#pending = { reply, candidates, output: '' };
       this.#timer = setTimeout(() => this.#stop('Local selection timed out. ' + unavailable), 30000);
       this.#worker.postMessage({
-        type: 'answer', question,
+        type: 'answer', single: true, question,
         context: candidates.map(({ text }, i) => 'S' + (i + 1) + ' ' + text).join('\n'),
       });
     } catch {
@@ -181,11 +181,12 @@ class SiteChat extends HTMLElement {
 
   #finish(request, viaModel = false) {
     const { reply, candidates, output } = request;
-    const result = selectExcerpt(output ?? '', candidates);
+    const choice = viaModel && modelExcerpt(output, candidates);
+    const result = choice || candidates[0];
     reply.textContent = result?.text ?? missing;
     if (result) {
       add(reply, 'a', result.source.title).href = result.source.path;
-      reply.dataset.mode = viaModel ? 'gemma' : 'excerpt';
+      reply.dataset.mode = choice ? 'gemma-selected' : viaModel ? 'gemma-fallback' : 'excerpt';
     }
     this.#ui.send.disabled = false;
     this.#ui.log.scrollTop = this.#ui.log.scrollHeight;

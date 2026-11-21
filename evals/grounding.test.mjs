@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFile } from 'node:fs/promises';
-import { normalizeKnowledge, rankExcerpts, selectExcerpt } from '../demo/site-retrieval.mjs';
+import { modelExcerpt, normalizeKnowledge, rankExcerpts } from '../demo/site-retrieval.mjs';
 
 const cases = JSON.parse(await readFile(new URL('./questions.json', import.meta.url)));
 for (const item of cases) {
@@ -23,8 +23,9 @@ test('citation scheme and credentials validation', () => {
 
 test('model choices stay within the approved shortlist', () => {
   const candidates = [{ text: 'One.' }, { text: 'Two.' }];
-  assert.equal(selectExcerpt(' S2 ', candidates), candidates[1]);
+  assert.equal(modelExcerpt(' S2 ', candidates), candidates[1]);
+  assert.equal(modelExcerpt('S2.', candidates), candidates[1]);
   for (const text of ['S999', '<script>alert(1)</script>', 'S2 followed by a claim', 'NONE']) {
-    assert.equal(selectExcerpt(text, candidates), candidates[0]);
+    assert.equal(modelExcerpt(text, candidates), undefined);
   }
 });
