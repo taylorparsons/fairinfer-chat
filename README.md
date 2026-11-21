@@ -25,3 +25,17 @@ Open [the local demo with startup status](http://127.0.0.1:8787/?chat-debug=1). 
 ## Licenses
 
 The original chat and demo code use the [MIT License](LICENSE). Google’s Gemma model uses the [Gemma Terms of Use](demo/assets/gemma-TERMS.txt) and carries its [model notice](demo/assets/Gemma-Notice.txt). Transformers.js uses [Apache 2.0](demo/assets/transformers-LICENSE.txt). ONNX Runtime Web has its own [MIT license and Microsoft copyright notice](demo/assets/onnxruntime-LICENSE.txt). Runtime binaries and model files are provisioned separately from the repository.
+
+## Local Git checks
+
+Enable the versioned hooks after cloning.
+
+```sh
+git config --local core.hooksPath .githooks
+git config --local commit.template .gitmessage
+python3 scripts/git_checks.py audit
+```
+
+Before a commit, the hooks check the Git index for common credential patterns, local paths, generated files, and errors from `git diff --check`. The audit also checks snapshots from reachable commits. Credential and workstation-path findings report filenames without printing the matching text.
+
+Use a Conventional Commits subject such as `fix(chat): keep the composer focused` or `docs: update the demo instructions`. Git-generated merge and revert subjects and autosquash prefixes are accepted.

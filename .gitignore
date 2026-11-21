@@ -1,4 +1,10 @@
 /demo/models/
 /demo/vendor/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.env
+.env.*
 .DS_Store
