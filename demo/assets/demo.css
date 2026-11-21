@@ -1,0 +1,34 @@
+body {
+  margin: 0;
+  color: #191c1d;
+  background: #f7fafb;
+  font: 1rem/1.6 system-ui, sans-serif;
+}
+
+main {
+  max-width: 48rem;
+  margin: 3rem auto;
+  padding: 0 1.25rem 5rem;
+}
+
+main a {
+  color: #004452;
+}
+
+#references article {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #c7d7db;
+  border-radius: .5rem;
+  background: white;
+  scroll-margin-top: 1rem;
+}
+
+#references h3 {
+  margin: 0;
+}
+
+#references article p {
+  margin: .5rem 0 0;
+  white-space: pre-line;
+}

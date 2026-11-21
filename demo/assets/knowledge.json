@@ -1,0 +1,238 @@
+{
+  "version": "9208e846125f9ead89984de091ad9614facb474faf68525dd5b76b4a32488969",
+  "sources": [
+    {
+      "id": "about",
+      "title": "About FairInfer LLC",
+      "path": "/#about",
+      "text": "Lean by Design. Impact by Choice.\nFairInfer LLC is a boutique concept discovery partner. I bypass corporate bloat to deliver surgical AI solutions that actually matter."
+    },
+    {
+      "id": "partnership",
+      "title": "Working with the founder",
+      "path": "/#partnership",
+      "text": "One Person, Deep Integration.\nFairInfer LLC doesn't send a sales team to win business and then hand clients off to a junior analyst. I operate as a tactical unit of one.\nZero bureaucracy, maximum velocity.\nOne Member Model\nA single point of accountability. Partners work directly with the founder to ensure the strategy is never lost in translation.\nEmbedded Specialist\nFairInfer LLC plugs into existing teams like a modular component, learning specific friction points from the inside out. Some engagements involve collaborators brought on as 1099 contractors, but the work is directed and delivered by one person."
+    },
+    {
+      "id": "mission",
+      "title": "Small businesses and nonprofits",
+      "path": "/#mission",
+      "text": "The greatest unlock for organizations changing the world.\nSmall businesses and nonprofits are the drivers of positive global change. While corporate giants spend millions on AI, FairInfer LLC ensures these critical mission-driven leaders aren't left behind.\nMy mission is to democratize intelligence, making sophisticated automation the greatest unlock for those focused on making the world a better place."
+    },
+    {
+      "id": "services",
+      "title": "Consulting services",
+      "path": "/work/#services",
+      "text": "Have an AI system or workflow problem?\nFairInfer LLC works with organizations that have a real operational problem and need someone who can move from discovery into a working system without requiring them to build an internal AI team.\nAvailable for discovery, architecture, prototyping, integration, implementation, and embedded AI systems work."
+    },
+    {
+      "id": "clairavoice",
+      "title": "ClairaVoice research",
+      "path": "/work/#clairavoice",
+      "text": "ClairaVoice\nPrivate, local-first AI voice companion research and development\nFounder-led FairInfer LLC R&D\nClairaVoice is not currently being offered as a commercial product. I am seeking an incubator, fellowship, or similar program with salary support, mentorship, and structured development time to continue development, prepare for pilot testing, and explore a sustainable product path.\nOlder adults living alone face real risk from isolation and cognitive decline, but voice assistants built on cloud AI ask them to trade privacy for help, sending household conversations to a third party with no clear boundary on what happens to that data. ClairaVoice is an ongoing FairInfer LLC research and development project testing whether a voice companion can offer memory and practical assistance without that tradeoff. The current system is a working technical prototype focused on validating architecture, privacy, interaction design, reliability, and the path toward real-world pilot testing.\nIts core AI stack runs locally instead of depending on cloud AI APIs. AI inference is separated onto NVIDIA Jetson hardware while voice services, persistent semantic memory, workflows, backup/recovery, and controlled network access operate across local Linux systems.\nTechnical scope\nLocal LLM inference and NVIDIA Jetson edge AI\nVoice AI architecture, speech-to-text, and text-to-speech\nPersistent semantic memory and Rust workflow orchestration\nLinux and Docker deployment under hardware constraints\nPrivate-network design, backup and recovery\nRollback and acceptance testing"
+    },
+    {
+      "id": "athena",
+      "title": "ATHENA delivery framework",
+      "path": "/work/#athena",
+      "text": "ATHENA\nTraceable AI-assisted software delivery\nAI coding agents move fast and forget everything. Without a record connecting what a customer asked for to what got built, teams lose the ability to explain why a piece of code exists, and every new agent session starts from zero context. ATHENA is an agent-agnostic framework that fixes this by preserving the connection between customer requests, decisions, requirements, implementation, and shipped code. It creates a traceable path from customer request to design decision to functional requirement to implementation task to execution evidence to Git commit.\nA later version added a deterministic context gateway so agents can retrieve task-relevant information without repeatedly loading the project's full historical record, cutting the token cost of staying oriented.\n63%\nlower total context consumption in the Claude Code test\n13.5%\nlower total context consumption in the Codex test\n~94%\nlower fixed session-opening context in those tests\nTechnical scope\nAI-assisted engineering workflows, requirements traceability, agent context management, deterministic tooling around LLMs, software delivery controls, and measurement and evaluation."
+    },
+    {
+      "id": "cortege",
+      "title": "CORTEGE prototype",
+      "path": "/work/#cortege",
+      "text": "CORTEGE\nMulti-agent security system prototype\nScam and fraud attempts increasingly target specific households with specific knowledge of who lives there, and generic fraud alerts don't account for that context. CORTEGE is an AI security companion prototype built around household-specific agents that assess scam, fraud, and security signals against what's normal for that household. The architecture treats the language model as one component inside a larger software system, with a React frontend, Express backend, REST and WebSocket APIs, agent orchestration, persistent state, encrypted personal information, and audit trails, rather than allowing the model itself to become the application.\nTechnical scope\nMulti-agent architecture, agent orchestration, REST and WebSocket APIs, AI application integration, PII encryption and redaction, SQLite persistence, tamper-evident audit trails, and privacy-aware system design."
+    },
+    {
+      "id": "ai-interview-practice",
+      "title": "AI Interview Practice",
+      "path": "/work/#ai-interview-practice",
+      "text": "AI Interview Practice\nDocument-driven realtime voice application\nGeneric mock-interview questions don't prepare candidates for the interview they're actually going to have, and most practice tools give feedback well after the moment it would have been useful. AI Interview Practice closes both gaps: it generates personalized interview sessions from a user's resume and target job description, evaluates written and spoken responses in realtime, provides structured feedback, and preserves sessions so a candidate can track improvement over time.\nTechnical scope\nRealtime voice AI, WebRTC integration, document ingestion, structured LLM output validation, AI evaluation workflows, persistent application state, FastAPI development, and user-facing AI product design."
+    },
+    {
+      "id": "ate-the-mic",
+      "title": "Ate the Mic",
+      "path": "/work/#ate-the-mic",
+      "text": "Ate the Mic\nReal-time AI public-speaking coach\nMost people don't get worse at public speaking from lack of knowledge, they get worse from lack of reps with honest feedback in the moment. Ate the Mic gives them that: a coach that watches and listens while they speak and responds in real time, not after the fact. Four modes cover different needs, guided practice for building a talk, composure drills for staying steady under pressure, timed challenges for pacing, and lower-pressure sessions for beginners, with session history so progress is visible over time.\nTechnical scope\nBuilt on the Gemini Live API for native audio and bidirectional WebSockets, with browser mic/camera streaming, a React/TypeScript frontend, Express backend on Google Cloud Run, Firestore for session data, managed authentication, and automated unit and end-to-end testing."
+    },
+    {
+      "id": "how-chat-works",
+      "title": "How the Gemma chat works",
+      "path": "/legal.html#how-chat-works",
+      "text": "How the chat works\nFairInfer’s chat uses Google’s open-weight Gemma 3 270M model. Your browser downloads the model files and a reference built from public FairInfer pages and project sources.\nThe chat generates replies entirely in your browser without calling a data center for inference. Your questions and replies stay in the page’s memory. If you send a founder inquiry, the site sends only the information you review and submit."
+    }
+  ],
+  "booking_url": "https://cal.com/taylor-parsons/fairinfer-intro?overlayCalendar=true",
+  "projects": [
+    {
+      "id": "athena",
+      "label": "ATHENA",
+      "aliases": [
+        "athena",
+        "athena skill",
+        "athena framework"
+      ],
+      "sources": [
+        {
+          "id": "athena-portfolio",
+          "title": "ATHENA portfolio",
+          "path": "https://taylorparsons.github.io/projects/athena-skill.html",
+          "text": "ATHENA keeps an audit trail from a request to shipped code. It records decisions, requirements, tasks, and execution evidence for work done with an AI coding agent."
+        },
+        {
+          "id": "athena-github",
+          "title": "ATHENA GitHub README",
+          "path": "https://github.com/taylorparsons/athena-skill/blob/70177ecfddbeacedf38d4320232e58fdf64848d4/README.md",
+          "text": "ATHENA’s Owl CLI opens a session with the active feature, goals, tasks, and recent request and decision IDs. The owl show command retrieves one record; the owl why command follows a requirement back through sources, tasks, and commits."
+        }
+      ]
+    },
+    {
+      "id": "cortege",
+      "label": "CORTEGE",
+      "aliases": [
+        "cortege",
+        "cortege hackathon"
+      ],
+      "sources": [
+        {
+          "id": "cortege-portfolio",
+          "title": "CORTEGE portfolio",
+          "path": "https://taylorparsons.github.io/projects/cortege-hackathon.html",
+          "text": "CORTEGE is a hackathon prototype for household-aware fraud assessment with companion agents. The public demo can use a simulated event or phone call with a message excerpt, suspicious URL, or screenshot note."
+        },
+        {
+          "id": "cortege-github",
+          "title": "CORTEGE GitHub README",
+          "path": "https://github.com/taylorparsons/cortege-hackathon/blob/7ae6a5da958ac35dbc8a9d55371797a7ddce9e42/README.md",
+          "text": "CORTEGE uses SQLite for storage with a tamper-evident audit trail. Its README describes encrypting household member names, phone numbers, dates of birth, and saved location details at rest."
+        }
+      ]
+    },
+    {
+      "id": "ai-interview-practice",
+      "label": "Interview Practice",
+      "aliases": [
+        "ai interview practice",
+        "interview practice app",
+        "interview practice"
+      ],
+      "sources": [
+        {
+          "id": "ai-interview-practice-portfolio",
+          "title": "Interview Practice portfolio",
+          "path": "https://taylorparsons.github.io/projects/interview-practice-app.html",
+          "text": "Interview Practice helps candidates rehearse for a specific role using a résumé and job description. It supports spoken answers and shows feedback and example answers."
+        },
+        {
+          "id": "ai-interview-practice-github",
+          "title": "Interview Practice GitHub README",
+          "path": "https://github.com/taylorparsons/interview-practice-app/blob/f5a4e86960258ae2445634a12956a987a7fe1d1b/README.md",
+          "text": "Interview Practice automatically saves progress and lets users resume a session. It supports custom questions and additional model-generated questions mid-session. Realtime voice coaching uses OpenAI Realtime with WebRTC."
+        }
+      ]
+    },
+    {
+      "id": "selenium-mcp",
+      "label": "Selenium MCP",
+      "aliases": [
+        "selenium mcp",
+        "selenium browser automation"
+      ],
+      "sources": [
+        {
+          "id": "selenium-mcp-portfolio",
+          "title": "Selenium MCP portfolio",
+          "path": "https://taylorparsons.github.io/projects/selenium-mcp.html",
+          "text": "Selenium MCP is written in Rust and connects a compatible MCP client to a real Chrome or Chromium browser. It can exercise web apps, save repeatable flows, check visual baselines, and capture screenshots or recordings."
+        }
+      ]
+    },
+    {
+      "id": "piper-tts-reader",
+      "label": "Piper TTS Reader",
+      "aliases": [
+        "piper tts reader",
+        "piper reader",
+        "piper tts",
+        "talk to me"
+      ],
+      "sources": [
+        {
+          "id": "piper-tts-reader-portfolio",
+          "title": "Piper TTS Reader portfolio",
+          "path": "https://taylorparsons.github.io/projects/talk-to-me.html",
+          "text": "Piper TTS Reader reads articles, drafts, or selected browser text aloud on macOS with sentence highlighting. Speech synthesis runs locally using the Piper CLI and a Piper voice model."
+        }
+      ]
+    },
+    {
+      "id": "pptx-utility",
+      "label": "PPTX Utility",
+      "aliases": [
+        "pptx utility",
+        "pptx extractor",
+        "powerpoint utility"
+      ],
+      "sources": [
+        {
+          "id": "pptx-utility-portfolio",
+          "title": "PPTX Utility portfolio",
+          "path": "https://taylorparsons.github.io/projects/pptx_extractor.html",
+          "text": "The PPTX Utility extracts presentation content to JSON so users can edit it and recreate the deck. It supports repeatable text changes to PowerPoint files and structured editing workflows."
+        }
+      ]
+    },
+    {
+      "id": "headless-linux-setup",
+      "label": "Headless Linux Setup",
+      "aliases": [
+        "headless linux setup",
+        "linux mint headless setup",
+        "headless linux"
+      ],
+      "sources": [
+        {
+          "id": "headless-linux-setup-portfolio",
+          "title": "Headless Linux Setup portfolio",
+          "path": "https://taylorparsons.github.io/projects/linux-mint-headless-setup.html",
+          "text": "Headless Linux Setup helps repurpose a Windows PC or Intel iMac as a Linux Mint server. The guide covers hardware assessment, installation, and administration with SSH, Docker, and file sharing."
+        }
+      ]
+    },
+    {
+      "id": "washington-ferry-tracker",
+      "label": "Washington Ferry Tracker",
+      "aliases": [
+        "washington ferry tracker",
+        "wa state ferry tracker",
+        "ferry tracker"
+      ],
+      "sources": [
+        {
+          "id": "washington-ferry-tracker-portfolio",
+          "title": "Washington Ferry Tracker portfolio",
+          "path": "https://taylorparsons.github.io/projects/wa-state-ferry-tracker.html",
+          "text": "Washington Ferry Tracker shows Puget Sound ferry locations, terminal cameras, and queue estimates. Local use supports Python or Docker; an access code is needed for direct live WSDOT polling instead of simulation."
+        }
+      ]
+    },
+    {
+      "id": "chatgpt-history-to-markdown",
+      "label": "ChatGPT History to Markdown",
+      "aliases": [
+        "chatgpt history to markdown",
+        "chatgpt export archive",
+        "chatgpt history archive"
+      ],
+      "sources": [
+        {
+          "id": "chatgpt-history-to-markdown-portfolio",
+          "title": "ChatGPT History to Markdown portfolio",
+          "path": "https://taylorparsons.github.io/projects/chatgpt-history-to-markdown.html",
+          "text": "ChatGPT History to Markdown turns ChatGPT exports into readable Markdown. It supports keyword and vector search to find earlier decisions, code examples, and ideas across exported conversations."
+        }
+      ]
+    }
+  ]
+}

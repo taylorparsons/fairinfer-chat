@@ -1,0 +1,4 @@
+/demo/models/
+/demo/vendor/
+__pycache__/
+.DS_Store

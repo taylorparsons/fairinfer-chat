@@ -1,0 +1,89 @@
+{
+  "model": "google/gemma-3-270m-it",
+  "artifact": "onnx-community/gemma-3-270m-it-ONNX",
+  "revision": "2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0",
+  "runtime": "Transformers.js 4.3.2 / ONNX Runtime Web 1.31.0-dev.20260914-8d85527a0",
+  "dtype": "q4",
+  "cache": "fairinfer-gemma-2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0-4.3.2-webgpu",
+  "files": [
+    {
+      "path": "/models/gemma-3-270m-it/config.json",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/config.json",
+      "bytes": 1652,
+      "sha256": "6b1ee5234edd196d26707b7b3f612cf6290bdd98aba4f0c5654fffbc0008287a"
+    },
+    {
+      "path": "/models/gemma-3-270m-it/generation_config.json",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/generation_config.json",
+      "bytes": 202,
+      "sha256": "94ef2242d98a6d0fd8bf6c71206b459f2fef81729f773ee37015d64b7cc11632"
+    },
+    {
+      "path": "/models/gemma-3-270m-it/tokenizer_config.json",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/tokenizer_config.json",
+      "bytes": 2313,
+      "sha256": "8ae5c9297e0ca85077c0f4952f85251b4773af7abc4673b62b54bc0b609a9667"
+    },
+    {
+      "path": "/models/gemma-3-270m-it/special_tokens_map.json",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/special_tokens_map.json",
+      "bytes": 662,
+      "sha256": "2f7b0adf4fb469770bb1490e3e35df87b1dc578246c5e7e6fc76ecf33213a397"
+    },
+    {
+      "path": "/models/gemma-3-270m-it/chat_template.jinja",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/chat_template.jinja",
+      "bytes": 1532,
+      "sha256": "7de1c58e208eda46e9c7f86397df37ec49883aeece39fb961e0a6b24088dd3c4"
+    },
+    {
+      "path": "/models/gemma-3-270m-it/tokenizer.json",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/tokenizer.json",
+      "bytes": 20323013,
+      "sha256": "55da1312bdf1d7d8fe8d9d1b3eed04086261149e6034e0ac3f8c633b67f5aac8"
+    },
+    {
+      "path": "/models/gemma-3-270m-it/onnx/model_q4.onnx",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/onnx/model_q4.onnx",
+      "bytes": 242522,
+      "sha256": "cb3615746a988839308507933d4e0501ff695e747a0a0ce15c0ef53083f8ec54"
+    },
+    {
+      "path": "/models/gemma-3-270m-it/onnx/model_q4.onnx_data",
+      "url": "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX/resolve/2dbbfdb1b59bd034eb959428c6a7da9dd7ea27f0/onnx/model_q4.onnx_data",
+      "bytes": 322933248,
+      "sha256": "25c4a14af32fc1011a90504076024b0e1f65f915e9690b44a5484200d2e20851"
+    },
+    {
+      "path": "/vendor/transformers.min.js",
+      "url": "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js",
+      "bytes": 587917,
+      "sha256": "8b5a3171f8876bab2b1820a7d65eb87628e3d30bb5ea85b9dd398e76eb34decb"
+    },
+    {
+      "path": "/vendor/ort-wasm-simd-threaded.jsep.mjs",
+      "url": "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/ort-wasm-simd-threaded.jsep.mjs",
+      "bytes": 46851,
+      "sha256": "c2f80e915e9df63289788a99d434d8c4e00e64e9c1f030f4b80b022458dd2c99"
+    },
+    {
+      "path": "/vendor/ort-wasm-simd-threaded.jsep.wasm",
+      "url": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.jsep.wasm",
+      "bytes": 28352885,
+      "sha256": "62ff86b2f2fa3a79eb87a7e4720e8ea9051942bf975f314181bf7dcef2feac06"
+    },
+    {
+      "path": "/vendor/ort-wasm-simd-threaded.asyncify.mjs",
+      "url": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.asyncify.mjs",
+      "bytes": 53057,
+      "sha256": "0966b6105cd936744498aa60df7a22cbd47af3374dbc64a9ab561c08a71e3611"
+    },
+    {
+      "path": "/vendor/ort-wasm-simd-threaded.asyncify.wasm",
+      "url": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.0-dev.20260914-8d85527a0/dist/ort-wasm-simd-threaded.asyncify.wasm",
+      "bytes": 26861777,
+      "sha256": "49871f5a4409519797e127440868a6d1923339d9185907f301a5b2a1d90af082"
+    }
+  ],
+  "total_bytes": 399407631
+}
