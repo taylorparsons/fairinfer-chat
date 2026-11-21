@@ -98,16 +98,18 @@ def build_site(root, brand, archive, model_root=None):
 
 def instrument_model_messages(js):
     js("""
-        window.scopeEval = { answers: 0, inject: false };
+        window.scopeEval = { answers: 0, inject: false, passageCount: null };
         const original = Worker.prototype.postMessage;
         Worker.prototype.postMessage = function(message, ...args) {
             if (message.type !== 'answer') return original.call(this, message, ...args);
             window.scopeEval.answers++;
+            window.scopeEval.passageCount = message.passages?.length ?? null;
             if (!window.scopeEval.inject) return original.call(this, message, ...args);
+            const text = window.scopeEval.inject === 'abstain'
+                ? 'NONE'
+                : 'S1. A day pass costs $999. <em>MODEL_SCOPE_FIXTURE</em>';
             queueMicrotask(() => {
-                this.dispatchEvent(new MessageEvent('message', {
-                    data: { type: 'token', text: 'S1. A day pass costs $999. <em>MODEL_SCOPE_FIXTURE</em>' },
-                }));
+                this.dispatchEvent(new MessageEvent('message', { data: { type: 'token', text } }));
                 this.dispatchEvent(new MessageEvent('message', { data: { type: 'complete' } }));
             });
         };
@@ -128,7 +130,7 @@ def check_model_scope(js, inside, ask, reply, question, expected, citation):
         assert not inside("return Boolean(s.querySelector('.log p:last-child a'));")
     print(f"Model scope: {len(probes)} unsupported and scope-override requests sent zero answer messages")
 
-    js("window.scopeEval.inject = true;")
+    js("window.scopeEval.inject = 'forged';")
     ask(question)
     until(lambda: inside("return s.querySelector('.log p:last-child')?.dataset.mode;") == "gemma-fallback",
           "approved excerpt after a synthetic unapproved worker completion")
@@ -139,8 +141,18 @@ def check_model_scope(js, inside, ask, reply, question, expected, citation):
     assert inside("return s.querySelector('.log p:last-child a').href;") == citation
     print("Model scope: synthetic forged claim and markup were discarded; the approved citation remained")
 
+    js("window.scopeEval.inject = 'abstain';")
+    ask(question)
+    until(lambda: inside("return s.querySelector('.log p:last-child')?.dataset.mode;") == "gemma-fallback",
+          "deterministic excerpt after a synthetic model decline")
+    assert js("return window.scopeEval.answers;") == delivered + 2
+    assert expected in reply()
+    assert inside("return s.querySelector('.log p:last-child a').href;") == citation
+    print("Model scope: explicit model decline used the approved excerpt and citation")
 
-def open_browser(base, binary, headless, origin, brand, hits, model_available, disable_gpu=False):
+
+def open_browser(base, binary, headless, origin, brand, hits, model_available, disable_gpu=False,
+                 require_model_selection=False):
     options = {"args": ["--window-size=1280,900"]}
     if headless:
         options["args"].append("--headless=new")
@@ -165,7 +177,7 @@ def open_browser(base, binary, headless, origin, brand, hits, model_available, d
         return inside("return s.querySelector('.log p:last-child')?.textContent || '';")
 
     question, expected, anchor, label, color = {
-        "library": ("How much is a day pass?", "Day passes cost $18", "#passes", "Ask the tool library", "rgb(7, 87, 69)"),
+        "library": ("How much is a weekday day pass?", "Day passes cost $18", "#passes", "Ask the tool library", "rgb(7, 87, 69)"),
         "studio": ("How long is the pottery tour?", "Each pottery tour lasts 45 minutes", "#pottery", "Ask Pine Studio", "rgb(101, 67, 106)"),
     }[brand]
     try:
@@ -206,8 +218,29 @@ def open_browser(base, binary, headless, origin, brand, hits, model_available, d
             assert any("/components/site-chat/models/" in p for p in hits)
             assert not any(p.startswith(("/assets/", "/models/", "/vendor/")) for p in hits)
             mode = inside("return s.querySelector('.log p:last-child').dataset.mode;")
+            if require_model_selection:
+                assert mode == "gemma-selected", f"Expected a real model selection, received {mode}"
             print(f"{brand}: expected citation after real on-device generation ({mode})")
             check_model_scope(js, inside, ask, reply, question, expected, origin + f"/{brand}/" + anchor)
+            if require_model_selection and brand == "library":
+                js("window.scopeEval.inject = false;")
+                ask("What membership do camping rentals require?")
+                until(lambda: inside("return s.querySelector('.log p:last-child')?.dataset.mode;")
+                      in {"gemma-selected", "gemma-fallback"}, "second in-scope model result")
+                assert "Camping rentals require a membership." in reply()
+                assert inside("return s.querySelector('.log p:last-child a').hash;") == "#camping"
+                mode = inside("return s.querySelector('.log p:last-child').dataset.mode;")
+                assert mode == "gemma-selected", f"Expected a second real selection, received {mode}"
+                print(f"{brand}: second supported answer used a correct citation ({mode})")
+                ask("How much is a day pass?")
+                until(lambda: inside("return s.querySelector('.log p:last-child')?.dataset.mode;")
+                      in {"gemma-selected", "gemma-fallback"}, "model result with two approved options")
+                assert js("return window.scopeEval.passageCount;") == 2
+                text = inside("return s.querySelector('.log p:last-child').firstChild.textContent;")
+                assert text in {"Day passes cost $18 on weekdays.", "Day passes cost $22 on weekends."}
+                assert inside("return s.querySelector('.log p:last-child a').hash;") == "#passes"
+                mode = inside("return s.querySelector('.log p:last-child').dataset.mode;")
+                print(f"{brand}: two-option request stayed within approved excerpts ({mode})")
         else:
             if disable_gpu:
                 assert inside("return s.querySelector('footer button').disabled;")
@@ -292,7 +325,10 @@ def main():
     parser.add_argument("--archive", type=Path, required=True)
     parser.add_argument("--model-root", type=Path)
     parser.add_argument("--headless", action="store_true")
+    parser.add_argument("--require-model-selection", action="store_true")
     args = parser.parse_args()
+    if args.require_model_selection and not args.model_root:
+        parser.error("--require-model-selection needs --model-root")
     with tempfile.TemporaryDirectory(prefix="site-chat-eval-") as temp, webdriver(args.chromedriver) as driver:
         directory = Path(temp)
         library = directory / "library"
@@ -300,7 +336,10 @@ def main():
         build_site(library, "library", args.archive, args.model_root.resolve() if args.model_root else None)
         build_site(studio, "studio", args.archive)
         with site(studio) as (studio_url, studio_hits), site(library, redirect=studio_url + "/studio/") as (library_url, library_hits):
-            version = open_browser(driver, args.chrome, args.headless, library_url, "library", library_hits, bool(args.model_root))
+            version = open_browser(
+                driver, args.chrome, args.headless, library_url, "library", library_hits,
+                bool(args.model_root), require_model_selection=args.require_model_selection,
+            )
             open_browser(driver, args.chrome, args.headless, studio_url, "studio", studio_hits, False)
             studio_hits.clear()
             open_browser(driver, args.chrome, args.headless, studio_url, "studio", studio_hits, False, disable_gpu=True)

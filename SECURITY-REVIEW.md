@@ -18,3 +18,9 @@ The first OSV pass flagged a Streamable HTTP client advisory for `rmcp` 3.8.0. T
 The review covers this implementation and the recorded tests. Hosts can supply misleading text, and lexical relevance can still miss intent. Keep the approved corpus current and use the linked source to verify consequential information. [Run the evals](evals/README.md)
 
 Report issues through the [security policy](SECURITY.md).
+
+## v0.1.1 constrained selection
+
+The reusable widget passes only shortlisted excerpt text to the worker. At decoding time, the pinned Transformers.js runtime masks every token except the numbers assigned to those excerpts and `0`. The worker converts the selected number to an allowed excerpt ID. An explicit `0` declines Gemma's ranking and returns the deterministic cited excerpt. An unexpected token is a worker error and also falls back to cited text.
+
+The UI continues to validate the worker response independently against its current shortlist. The browser eval checks that two supported prompts produce real model selections, that off-topic and override probes send zero answer requests, and that a synthetic forged claim or explicit model decline produces the approved fallback. [Browser eval](evals/browser.py)

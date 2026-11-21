@@ -2,7 +2,7 @@
   "version": 1,
   "starters": ["How much is a day pass?"],
   "sources": [
-    {"id": "passes", "title": "Day passes", "path": "./#passes", "text": "Day passes cost $18 on weekdays."},
+    {"id": "passes", "title": "Day passes", "path": "./#passes", "text": "Day passes cost $18 on weekdays. Day passes cost $22 on weekends."},
     {"id": "camping", "title": "Camping rentals", "path": "./#camping", "text": "Camping rentals require a membership."}
   ]
 }

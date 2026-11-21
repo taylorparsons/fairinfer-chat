@@ -7,16 +7,16 @@ node --test evals/grounding.test.mjs
 python3 evals/sitemap.py
 cargo test --locked --manifest-path importer/Cargo.toml
 cargo build --locked --manifest-path importer/Cargo.toml
-python3 scripts/release.py --output /tmp/site-chat-release
+python3 scripts/release.py --version 0.1.1 --output /tmp/site-chat-release
 python3 scripts/demo.py provision
 python3 evals/browser.py \
   --chromedriver /path/to/chromedriver \
   --importer importer/target/debug/site-chat-import \
-  --archive /tmp/site-chat-release/site-chat-0.1.0.zip \
-  --model-root demo
+  --archive /tmp/site-chat-release/site-chat-0.1.1.zip \
+  --model-root demo --require-model-selection
 ~~~
 
-Use a ChromeDriver matching the installed Chrome. For an alternate Chrome installation, pass `--chrome`. Omit `--model-root` to test the excerpt-only and missing-model flows. `--headless` can run those cases without a display. The real model eval needs a browser session with a working WebGPU adapter.
+Use a ChromeDriver matching the installed Chrome. For an alternate Chrome installation, pass `--chrome`. Omit `--model-root` and `--require-model-selection` to test the excerpt-only and missing-model flows. `--headless` can run those cases without a display. The real model eval needs a browser session with a working WebGPU adapter.
 
 ## What the browser run checks
 
@@ -24,6 +24,8 @@ Use a ChromeDriver matching the installed Chrome. For an alternate Chrome instal
 - Zero requests for model or runtime files until visitor opt-in. The optional Gemma run requires a real warmup and completed generation, verifies the expected citation, and prints whether Gemma selected an allowed ID or the excerpt fallback answered.
 - Model scope probes run with the real WebGPU worker warmed up. A browser-side counter verifies that an unrelated creative request and a pricing instruction override generate zero answer messages.
 - A separate synthetic worker completion claims a fabricated price and includes markup after a valid-looking ID. The widget presents only the original cited excerpt.
+- Two supported model results must select the correct sourced quote when `--require-model-selection` is on. The eval also sends a question with two eligible excerpts and checks the allowed output and citation.
+- A synthetic model decline verifies deterministic excerpt fallback independently of the forged-response test.
 - Excerpt answers with missing model files and with WebGPU disabled for the test.
 - CLI imports give byte-identical outputs on repeat runs, include the studio's JavaScript-rendered heading, and exclude hidden text, forms, and footer content.
 - A redirect outside the approved URL fails export. The two destinations run on separate loopback origins so the check measures both export rejection and browser navigation.
@@ -49,3 +51,13 @@ python3 scripts/git_checks.py audit
 | Excerpt fallback | Passed with missing model files and with the WebGPU API disabled in the test. |
 | Importer | Three visible sections from each site. Repeat output matched byte for byte, and CLI and MCP output matched on the studio site. |
 | Dependency review | 176 versions checked. One upstream maintenance advisory remained after upgrading the MCP SDK. |
+
+## 0.1.1 verification
+
+| Check | Result |
+| --- | --- |
+| Browser | Chrome 158.0.8127.37, two nested installs |
+| Real WebGPU Gemma | Correct cited selections for the weekday pass and camping membership questions. A third request presented both weekday and weekend passages and Gemma returned an allowed choice. |
+| Input scope | The unrelated prompt and instruction to invent a price produced zero model answer messages. |
+| Output scope | A separate synthetic forged completion and an explicit model decline both used the approved fallback and citation. |
+| Regression checks | 11 grounding cases, two Rust policy tests, two sitemap tests, and the browser CLI and MCP importer checks passed. |

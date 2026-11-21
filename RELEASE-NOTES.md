@@ -1,3 +1,13 @@
+# Site Chat v0.1.1
+
+Gemma now chooses from a short list of approved website excerpts. The decoder can emit only the number of an offered passage or a decline. The widget displays the selected passage verbatim with its citation. A model decline or invalid worker response uses the deterministic approved excerpt.
+
+[Download ZIP](https://github.com/taylorparsons/fairinfer-chat/releases/download/v0.1.1/site-chat-0.1.1.zip) · [SHA-256](https://github.com/taylorparsons/fairinfer-chat/releases/download/v0.1.1/site-chat-0.1.1.zip.sha256) · [Installation guide](https://github.com/taylorparsons/fairinfer-chat/blob/v0.1.1/INSTALL.md)
+
+## Verification
+
+Chrome verified both supported model selections and a third selection with two allowed excerpts. Unsupported and override prompts sent zero requests to Gemma. A synthetic forged completion and an explicit model decline both used the approved fallback. Nested installs and the Rust Selenium CLI and MCP importer passed on two synthetic sites. [Evals and results](https://github.com/taylorparsons/fairinfer-chat/tree/v0.1.1/evals) · [Security review](https://github.com/taylorparsons/fairinfer-chat/blob/v0.1.1/SECURITY-REVIEW.md)
+
 # Site Chat v0.1.0
 
 Site Chat packages FairInfer’s browser chat as a configurable, self-hosted component. It starts with cited excerpt search. Visitors can opt in to Gemma on devices with WebGPU.

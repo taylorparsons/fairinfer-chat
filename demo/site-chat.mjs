@@ -170,7 +170,7 @@ class SiteChat extends HTMLElement {
       this.#timer = setTimeout(() => this.#stop('Local selection timed out. ' + unavailable), 30000);
       this.#worker.postMessage({
         type: 'answer', single: true, question,
-        context: candidates.map(({ text }, i) => 'S' + (i + 1) + ' ' + text).join('\n'),
+        passages: candidates.map(({ text }) => text),
       });
     } catch {
       this.#stop('Could not load the site’s excerpts.');
