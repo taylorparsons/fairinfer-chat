@@ -1,0 +1,43 @@
+[
+  {
+    "name": "tool library: supported price and original excerpt",
+    "question": "How much is a day pass?",
+    "sources": [{"id":"day", "title":"Day passes", "path":"/library/#day", "text":"Day passes cost $18 on weekdays."}],
+    "source": "day",
+    "excerpt": "Day passes cost $18 on weekdays."
+  },
+  {
+    "name": "tool library: nearby fact must not answer a different price",
+    "question": "How much does a monthly pass cost?",
+    "sources": [{"id":"day", "title":"Day passes", "path":"/library/#day", "text":"Day passes cost $18 on weekdays."}],
+    "source": null
+  },
+  {
+    "name": "tool library: source discusses rentals but omits price",
+    "question": "What is the camping rental price?",
+    "sources": [{"id":"policy", "title":"Camping rentals", "path":"/library/#camping", "text":"Camping rentals require a membership."}],
+    "source": null
+  },
+  {
+    "name": "studio: supported duration from a different site",
+    "question": "How long is the pottery tour?",
+    "sources": [{"id":"tour", "title":"Pottery tours", "path":"/studio/#pottery", "text":"Each pottery tour lasts 45 minutes."}],
+    "source": "tour",
+    "excerpt": "Each pottery tour lasts 45 minutes."
+  },
+  {
+    "name": "studio: an unrelated question yields no answer",
+    "question": "Can I renew my passport online?",
+    "sources": [{"id":"tour", "title":"Pottery tours", "path":"/studio/#pottery", "text":"Each pottery tour lasts 45 minutes."}],
+    "source": null
+  },
+  {
+    "name": "studio: source identity matches subject over a generic tour",
+    "question": "Where does the glass tour start?",
+    "sources": [
+      {"id":"pottery", "title":"Pottery tour", "path":"/studio/#pottery", "text":"The pottery tour starts in the north lobby."},
+      {"id":"glass", "title":"Glass tour", "path":"/studio/#glass", "text":"The glass tour starts in the south courtyard."}
+    ],
+    "source": "glass"
+  }
+]

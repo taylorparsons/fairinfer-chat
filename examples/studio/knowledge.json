@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "starters": ["How long is the pottery tour?"],
+  "sources": [
+    {"id": "pottery", "title": "Pottery tours", "path": "./#pottery", "text": "Each pottery tour lasts 45 minutes."},
+    {"id": "glass", "title": "Glass tours", "path": "./#glass", "text": "The glass tour starts in the south courtyard."}
+  ]
+}

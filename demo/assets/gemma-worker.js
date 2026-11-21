@@ -3,7 +3,9 @@ let phase = 'idle', lastRuntimeError = '';
 const originalError = console.error.bind(console);
 console.error = (...args) => { lastRuntimeError = args.map(String).join(' ').slice(0, 1000); originalError(...args); };
 const send = (type, extra = {}) => postMessage({ type, ...extra });
-const cacheRequest = path => new Request(new URL(path, self.location.origin));
+const root = new URL('../', self.location.href);
+const asset = path => new URL(path.replace(/^\//, ''), root);
+const cacheRequest = path => new Request(asset(path));
 async function matchesPinned(bytes, file) {
   if (bytes.byteLength !== file.bytes) return false;
   const digest = await crypto.subtle.digest('SHA-256', bytes);
@@ -23,13 +25,15 @@ async function load(device) {
     send('device', { device, limits: { buffer: adapter.limits.maxBufferSize, storage: adapter.limits.maxStorageBufferBindingSize }, features: Array.from(adapter.features) });
   }
   startupPhase('reading model release');
-  const release = await fetch('/assets/model-release.json', { signal: abort.signal });
+  const release = await fetch(asset('assets/model-release.json'), { signal: abort.signal, redirect: 'error' });
   if (!release.ok) throw new Error(`Model release is unavailable (HTTP ${release.status}).`);
   manifest = await release.json();
   startupPhase('verifying and loading model files');
   const cache = await caches.open(manifest.cache);
   let done = 0;
   for (const file of manifest.files) {
+    if (!/^\/(?:models|vendor)\/[a-z0-9_.\/-]+$/i.test(file.path)
+      || file.path.split('/').includes('..')) throw new Error('Invalid path in model manifest.');
     const request = cacheRequest(file.path);
     const cached = await cache.match(request);
     if (cached) {
@@ -39,7 +43,7 @@ async function load(device) {
       }
       await cache.delete(request);
       send('cache-repair', { path: file.path }); }
-    const response = await fetch(request, { signal: abort.signal, cache: 'no-store' });
+    const response = await fetch(request, { signal: abort.signal, cache: 'no-store', redirect: 'error' });
     if (!response.ok) throw new Error(`Model asset ${file.path} is unavailable (HTTP ${response.status}).`);
     const reader = response.body.getReader(); const parts = []; let received = 0;
     while (true) {
@@ -55,14 +59,14 @@ async function load(device) {
     done += file.bytes;
   }
   startupPhase('loading the browser runtime');
-  runtime = await import('/vendor/transformers.min.js');
+  runtime = await import(asset('vendor/transformers.min.js').href);
   runtime.env.allowRemoteModels = false;
   runtime.env.allowLocalModels = true;
-  runtime.env.localModelPath = '/models/';
+  runtime.env.localModelPath = asset('models/').href;
   runtime.env.useBrowserCache = false;
   runtime.env.useCustomCache = true;
   runtime.env.customCache = { match: request => cache.match(request), put: (request, response) => cache.put(request, response) };
-  runtime.env.backends.onnx.wasm.wasmPaths = '/vendor/';
+  runtime.env.backends.onnx.wasm.wasmPaths = asset('vendor/').href;
   runtime.env.backends.onnx.wasm.numThreads = 1;
   runtime.env.backends.onnx.wasm.proxy = false;
   startupPhase('loading the tokenizer');

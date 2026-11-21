@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
@@ -12,11 +13,13 @@ DEMO = Path(__file__).resolve().parents[1] / "demo"
 BLOCK_SIZE = 1024 * 1024
 
 
-def provision_file(artifact):
+def provision_file(directory, artifact):
     relative = Path(artifact["path"].lstrip("/"))
-    if relative.parts[0] not in {"models", "vendor"} or ".." in relative.parts:
+    if len(relative.parts) < 2 or relative.parts[0] not in {"models", "vendor"} or ".." in relative.parts:
         raise ValueError(f"Unexpected asset path: {relative}")
-    target = DEMO / relative
+    target = directory / relative
+    if not target.resolve().is_relative_to(directory):
+        raise ValueError(f"Asset path leaves the installation directory: {relative}")
     size = artifact["bytes"]
     expected = artifact["sha256"]
     if target.is_file() and target.stat().st_size == size:
@@ -53,9 +56,6 @@ class DemoHandler(SimpleHTTPRequestHandler):
         ".mjs": "text/javascript",
     }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(DEMO), **kwargs)
-
     def end_headers(self):
         self.send_header(
             "Content-Security-Policy",
@@ -73,18 +73,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("provision", "serve"))
     parser.add_argument("--port", type=int, default=8787, help="Loopback port for serve")
+    parser.add_argument("--directory", type=Path, default=DEMO, help="Site or widget directory")
     args = parser.parse_args()
+    directory = args.directory.resolve()
 
     if args.command == "provision":
         try:
-            release = json.loads((DEMO / "assets/model-release.json").read_text(encoding="utf-8"))
+            release = json.loads((directory / "assets/model-release.json").read_text(encoding="utf-8"))
             for artifact in release["files"]:
-                provision_file(artifact)
+                provision_file(directory, artifact)
         except (OSError, ValueError) as error:
             parser.exit(1, f"Provisioning failed: {error}\n")
         print("Verified all pinned model and runtime files.")
     else:
-        with ThreadingHTTPServer(("127.0.0.1", args.port), DemoHandler) as server:
+        handler = partial(DemoHandler, directory=directory)
+        with ThreadingHTTPServer(("127.0.0.1", args.port), handler) as server:
             print(f"Open http://127.0.0.1:{server.server_port}/?chat-debug=1", flush=True)
             try:
                 server.serve_forever()

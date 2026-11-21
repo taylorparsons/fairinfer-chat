@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Harbor Tool Library</title>
+  <script type="module" src="../components/site-chat/site-chat.mjs"></script>
+</head>
+<body>
+  <header><h1>Harbor Tool Library</h1></header>
+  <nav><a href="#contact">Contact the library</a></nav>
+  <main>
+    <h2 id="passes">Day passes</h2>
+    <p>Day passes cost $18 on weekdays.</p>
+    <p hidden>Internal fixture text.</p>
+    <h2 id="camping">Camping rentals</h2>
+    <p>Camping rentals require a membership.</p>
+    <form><label>Fixture email <input value="excluded@example.invalid"></label></form>
+    <h2 id="contact">Contact</h2>
+    <p>Visit the desk to ask about tools.</p>
+  </main>
+  <footer>Footer fixture text.</footer>
+  <site-chat title="Ask the tool library" accent="#075745" knowledge="./knowledge.json"
+    contact="#contact" contact-label="Contact the library"></site-chat>
+</body>
+</html>
