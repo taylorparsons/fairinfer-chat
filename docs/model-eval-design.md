@@ -112,6 +112,24 @@ Add a separate routing model as a later eval arm if the single-model loop reveal
 
 ## Website conversation
 
+```mermaid
+flowchart TD
+    A["Visitor asks: What about weekends?"] --> B["1. Interpret using recent chat turns"]
+    B --> C["Search approved site content"]
+    B --> H["Ask for clarification if needed"]
+    H -->|Visitor clarifies| A
+    C --> D["2. Draft a reply from up to three passages"]
+    C -->|No eligible passage| J{"Retry available?"}
+    D --> E["3. Check the draft against its sources"]
+    E -->|Supported| F["Show the answer with citations"]
+    E -->|Recoverable miss| J
+    E -->|Decline| I["Show no match and offer the site contact link"]
+    J -->|Yes| G["Show retry status and rewrite once"]
+    G --> B
+    J -->|No| I
+    F -->|Visitor follows up| A
+```
+
 Keep a bounded history in the tab for follow-up references. Use recent user turns, verified assistant replies, and cited passage IDs as context. Treat conversation history as a reference for interpreting the next question. Retrieve approved evidence again for each factual reply. A topic change starts retrieval from the new question. A clear-chat control discards the conversation and cancels any pending turn. When the reference remains ambiguous, ask one focused clarifying question and wait for the visitor's reply. An unsupported question gets the existing no-match response with the site's contact link.
 
 Keep the excerpt-only path usable when optional models are disabled or unavailable. A visitor can still ask a standalone question and get a cited passage. When the conversational arm cannot verify a draft, render a cited excerpt only if that excerpt independently answers the resolved question. Use the no-match state or ask for clarification when the evidence is insufficient.
