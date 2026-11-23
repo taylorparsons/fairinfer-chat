@@ -4,7 +4,7 @@
 
 Add a local browser benchmark that runs the same questions through excerpt-only search, the Gemma 3 270M IT q4 release baseline, and one or more candidate models. Add a second comparison axis for lexical versus hybrid vector retrieval so retrieval gains can be measured separately from model selection. All arms use the installed `<site-chat>` widget, the same approved content, and the same rendering code, with retrieval held fixed when comparing selectors. A candidate earns consideration when it improves the passages users see and fits the startup, latency, and download budgets for the target devices.
 
-The first version targets WebGPU via the existing Transformers.js and ONNX Runtime Web stack. The benchmark evaluates passage selection for Site Chat. The original FairInfer demo also generates creative drafts, which require a separate evaluation if they become part of the model decision.
+The first version targets WebGPU via the existing Transformers.js and ONNX Runtime Web stack. Compare one-pass excerpt selection with an optional three-call inference loop using the same model. The benchmark evaluates passage selection for Site Chat. The original FairInfer demo also generates creative drafts, which require a separate evaluation if they become part of the model decision.
 
 ## Why the existing harness needs an addition
 
@@ -80,6 +80,34 @@ Report **Recall@3** over all answerable cases, first-ranked excerpt accuracy, fi
 
 Before promoting hybrid search, verify that the browser can retrieve and cite passages with the generation model disabled, uses lexical fallback when an index is stale or missing, and stays within the measured download budget. Review whether held-out paraphrases improve without increasing unsupported answers or losing correct citations.
 
+## Browser inference loop
+
+Use the existing Transformers.js and ONNX Runtime Web stack for the query encoder and LLM. Keep orchestration in JavaScript with one loaded LLM worker and one in-flight model call per browser tab. The query encoder remains an optional asset of semantic search. Reusing the LLM for all stages adds calls and uses the same LLM download.
+
+### Request flow
+
+| Stage | Model output | JavaScript validation |
+| --- | --- | --- |
+| 1. Interpret | A bounded search query that preserves the user's intent. | Validate the response shape and length. Keep the original question for grounding and use it for retrieval if the rewrite is unusable. |
+| 2. Select | One passage ID from the shortlist or an explicit decline. | Run the configured retrieval mode on the search query. Take up to three ranked, approved passages. Send the original question and those passages to the selector. Validate the returned ID. |
+| 3. Evaluate | Accept, retry with a reason, or decline. | Give the evaluator the original question and the selected approved passage. Validate its verdict. On acceptance, render the approved excerpt and citation from the knowledge snapshot. |
+
+The worker exposes distinct request types for interpretation, selection, and evaluation. Reuse the constrained choice contract for selection and validate every stage's response in JavaScript. Use request and attempt IDs to ignore stale results. Start the next stage only after the prior call settles and releases request-scoped resources. If retrieval produces no eligible passages, skip selection and use the retry or no-answer path.
+
+### Retry, progress, and resource handling
+
+Allow one retry of the three-stage flow for a recoverable issue, such as a rewrite that retrieves the wrong topic or an excerpt rejected for insufficient evidence. Cap each request at two attempts and six LLM calls. Configure per-stage token limits and a single wall-clock deadline shared by both attempts. A retry begins with a new rewrite using the original question and the validated failure reason. Stop if that rewrite and its inputs would repeat an already failed attempt. The visitor sees a status update before retrying and can cancel throughout.
+
+JavaScript ends the loop on cancellation, deadline, worker error, GPU device loss, or an out-of-memory signal. Use configured input and output limits and one in-flight call to control resource use. Handle observable failures without relying on a device-memory estimate. If the worker cannot confirm cancellation before the deadline, terminate it and ignore late messages. A worker failure can use the existing approved-excerpt fallback, with the result attributed to fallback. After an explicit finding of insufficient evidence, show the no-match state if the retry fails. The eval must record any incorrect fallback separately from an accepted selection.
+
+### Eval arms and acceptance
+
+Make the loop an opt-in eval arm. Pair it with one-pass excerpt selection using the same LLM revision, device, fixture, index, and lexical or hybrid retrieval configuration. The full loop can change the candidate list through query rewriting. To isolate the changes, also run a rewrite-plus-selection arm with no model evaluator, and an evaluation arm that consumes the same candidate lists and selected IDs as the one-pass baseline. Use the frozen held-out set to score the outcome independently of the model's verdict.
+
+Report correct cited answers gained and lost on paired cases, shortlist recall before and after rewriting, evaluator false accepts and false rejects, recovery after retry, fallbacks, interruptions, and no-match outcomes. Measure actual stage calls, per-stage latency, median and p95 end-to-end latency, and completion and failure rates. Test normal completion, status before retry, cancellation, deadline exhaustion, invalid output, and a worker or GPU failure. Treat rendered unapproved text or mismatched citations as regressions.
+
+Add a separate routing model as a later eval arm if the single-model loop reveals a routing gap. Compare it against the same loop with the existing model and include its incremental download, startup time, and device impact.
+
 ## Cases and scoring
 
 | Case type | Expected result |
@@ -112,4 +140,4 @@ For every run, capture the worker dispatch count and outcome, selected rank if a
 3. Exercise one reviewed non-Gemma profile end to end on a WebGPU device. Test missing or mismatched assets, incompatible tokenizers, timeout attribution, and correct fallback classification. Unsupported hardware and candidate failures must appear as explicit results. Write reports even on partial failures and return a nonzero exit for invalid setup, incomplete requested runs, or grounding regressions. Ordinary differences in model accuracy remain report results.
 4. Keep the comparison command opt-in. First collect the excerpt-only and Gemma baselines, then run the candidate on the same device. Measure on the device classes that matter before setting promotion thresholds. A candidate should show a paired gain on the questions it can improve, preserve approved-text and citation behavior, and meet the chosen device budgets.
 
-Start with the two existing arms and fixture cases. Then parameterize the loader and add candidate preflight. Add the index builder and browser query path, then run the crossed comparison with repeatable timing and byte reporting. Defer CI with a GPU runner, additional inference backends, and an in-product model picker until the benchmark establishes a need for them.
+Start with the two existing arms and fixture cases. Then parameterize the loader and add candidate preflight. Add the index builder and browser query path, then run the crossed comparison with repeatable timing and byte reporting. Add the inference loop after recording the one-pass baselines. Defer CI with a GPU runner, additional inference backends, and an in-product model picker until the benchmark establishes a need for them.
