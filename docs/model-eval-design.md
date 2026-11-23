@@ -2,7 +2,7 @@
 
 ## Decision
 
-Add a local browser benchmark that runs the same questions through excerpt-only search, the Gemma 3 270M IT q4 release baseline, and one or more candidate models. All arms use the installed `<site-chat>` widget, the same approved content, and the same retrieval and rendering code. A candidate earns consideration when it improves the passages users see and fits the startup, latency, and download budgets for the target devices.
+Add a local browser benchmark that runs the same questions through excerpt-only search, the Gemma 3 270M IT q4 release baseline, and one or more candidate models. Add a second comparison axis for lexical versus hybrid vector retrieval so retrieval gains can be measured separately from model selection. All arms use the installed `<site-chat>` widget, the same approved content, and the same rendering code, with retrieval held fixed when comparing selectors. A candidate earns consideration when it improves the passages users see and fits the startup, latency, and download budgets for the target devices.
 
 The first version targets WebGPU via the existing Transformers.js and ONNX Runtime Web stack. The benchmark evaluates passage selection for Site Chat. The original FairInfer demo also generates creative drafts, which require a separate evaluation if they become part of the model decision.
 
@@ -42,6 +42,44 @@ python3 evals/compare_models.py \
 
 Build the archive from the implementation checkout. Repeat `--candidate` for each provisioned model. Include both baselines automatically. Allow `--cases` for a second case set, with the versioned synthetic suite as the default. Each arm runs serially on the same browser and device. Rotate the arm order across repeats, preserve case order across arms within each repeat, and keep the order or seed in the report.
 
+## Browser vector index
+
+### Index and query path
+
+Build the index from the site's approved knowledge snapshot. Reuse the production passage splitter so both search paths reference the same text and citation. Assign each passage a key from its source ID and its position within that source. Embed each passage with one pinned model and write a compact binary table with one int8 vector per passage. Store the keys or their row mapping separately from the vectors. Read display text and citation URLs from the approved knowledge snapshot.
+
+Pin the embedding model revision and asset hashes, index format version, dimensions, query and passage preprocessing, normalization, quantization settings, and a SHA-256 of the knowledge snapshot. The browser validates format, bounds, and snapshot identity before use. Rebuild when the content, passage splitter, or embedding model changes. On missing, stale, corrupt, or unsupported assets, use the existing excerpt search and record the reason in the eval.
+
+After opt-in, embed the submitted query locally with the encoder paired with the index. Apply the same normalization contract and compare against the packed vectors with a flat dot-product scan. For the first version, use symmetric quantization of normalized passage vectors with a shared scale, so unpacked float32 copies of the entire table are unnecessary. Treat 384 dimensions as a sizing example and derive the actual dimensions from the selected encoder.
+
+Retrieve a bounded list from the lexical ranker and from the semantic scan. Drop semantic candidates below a calibrated score threshold, fuse eligible lists with reciprocal rank fusion, deduplicate by passage key, and retain up to three passages. Fit the semantic threshold on a separate calibration split before comparing results on held-out questions. Dispatch only when at least one lexical or semantic passage qualifies under the selected retrieval mode. A semantic-only candidate may qualify on its calibrated score. Treat worker dispatches on the held-out out-of-scope cases as regressions. When no passage qualifies, show the existing no-answer state. The index derives its matches from site text and the visitor's query. It requires no hand-written phrases, synonyms, or question-to-answer mappings.
+
+Keep approved text and citations as the only rendered answer content. The semantic search path can return cited excerpts without enabling Gemma. Measure semantic and LLM asset requests independently. Before opt-in, the default excerpt path uses the existing knowledge bundle and fetches neither optional asset bundle. Index and encoder assets are pinned, served from the site's origin, and used locally.
+
+### Download budget
+
+Use **1 MB for the index** and **10 MB for the complete incremental semantic bundle** as initial targets. Count the index, metadata, tokenizer, encoder weights, and any runtime files the browser must fetch to enable semantic search from the default excerpt path. Report both published asset bytes and actual cold-cache response bytes. Account for a shared runtime once in the combined first-load total and report generation weights separately.
+
+The raw int8 vector table uses dimensions × passage count bytes. At 384 dimensions it is 38.4 KB for 100 passages or 384 KB for 1,000 passages, before metadata. Size from the site's actual passage count. Preflight reports budget overruns explicitly. A run that exceeds the target can report accuracy results and cannot qualify as within budget.
+
+### Eval matrix
+
+| Retrieval | Selector | What the comparison measures |
+| --- | --- | --- |
+| Lexical | First eligible excerpt | Current no-model baseline. |
+| Hybrid | First eligible excerpt | Change from retrieval alone and the download cost of semantic search without a generation model. |
+| Lexical | Pinned Gemma | Existing release behavior with model selection. |
+| Hybrid | Pinned Gemma | Effect of changing retrieval with the selector held fixed. |
+| Lexical and hybrid | Each candidate LLM | Change from swapping the selector at a fixed retrieval mode and any interaction between the two. |
+
+Keep the fixture text, browser, candidate limit, and questions fixed across arms. Capture each dispatch's ordered passage keys and scores. For paired selector comparisons, verify that the shortlist and order match for the same question and retrieval mode. Preserve the existing model-only command behavior. Add a proposed `--semantic-root` option that supplies provisioned encoder assets and fixture indexes and enables the hybrid arms.
+
+Include held-out paraphrases with little lexical overlap, disambiguation cases such as weekday versus weekend rates, unrelated or unsupported questions near a known topic, and sites with similar wording for distinct passages. Freeze fixture expectations before running the held-out set. Build indexes from approved fixture passages only.
+
+Report **Recall@3** over all answerable cases, first-ranked excerpt accuracy, final cited-answer accuracy, unsupported-answer rate, and unexpected selector dispatches. Count questions rescued and made worse versus the lexical arm on paired cases. Break out query embedding, vector scan and fusion, and time to the rendered answer. Measure bytes and cold startup with fresh browser profiles. A hybrid run that falls back to lexical search records a degraded result. It does not count as a successful semantic run.
+
+Before promoting hybrid search, verify that the browser can retrieve and cite passages with the generation model disabled, uses lexical fallback when an index is stale or missing, and stays within the measured download budget. Review whether held-out paraphrases improve without increasing unsupported answers or losing correct citations.
+
 ## Cases and scoring
 
 | Case type | Expected result |
@@ -52,7 +90,7 @@ Build the archive from the implementation checkout. Repeat `--candidate` for eac
 | Unsupported or out-of-scope question | No citation and zero worker `answer` messages. Keep the existing release scope and synthetic fallback checks runnable as regression coverage. |
 | Worker decline, invalid reply, or failure | Use the first approved excerpt when available. Exercise these paths as compatibility checks and record distinct reasons. Score only naturally occurring outcomes in the quality comparison. |
 
-At startup, reuse `rankExcerpts()` with the same normalized fixture knowledge to record candidate order and verify the case set. Classify answerable cases whose expected passage is absent from the top three as retrieval misses and keep them in the end-to-end score. Publish shortlist coverage and the count of genuine reranking opportunities. Treat annotated rank expectations that drift as fixture failures so the benchmark cannot lose its hard cases silently.
+At startup, verify the lexical fixture expectations with `rankExcerpts()` on the same normalized knowledge. In hybrid arms, record the actual browser shortlist after fusion and use it to score shortlist coverage. Classify answerable cases whose expected passage is absent from the top three as retrieval misses and keep them in the end-to-end score. Publish shortlist coverage and the count of genuine reranking opportunities. Treat annotated rank expectations that drift as fixture failures so the benchmark cannot lose its hard cases silently.
 
 For every run, capture the worker dispatch count and outcome, selected rank if available, exact visible excerpt text, citation, and timings. Observe worker events before the widget consumes them and observe the DOM for the rendered outcome. Record readiness failures, `NONE`, invalid output, `input-too-long`, runtime errors, timeouts, and post-failure worker unavailability separately. Associate observations with the active request and worker instance. When a failure unloads the worker, record the failed case and re-enable the worker before the next model case. If restart fails, mark the remaining model cases unavailable, retain the partial results, and skip the quality comparison for that arm.
 
@@ -74,4 +112,4 @@ For every run, capture the worker dispatch count and outcome, selected rank if a
 3. Exercise one reviewed non-Gemma profile end to end on a WebGPU device. Test missing or mismatched assets, incompatible tokenizers, timeout attribution, and correct fallback classification. Unsupported hardware and candidate failures must appear as explicit results. Write reports even on partial failures and return a nonzero exit for invalid setup, incomplete requested runs, or grounding regressions. Ordinary differences in model accuracy remain report results.
 4. Keep the comparison command opt-in. First collect the excerpt-only and Gemma baselines, then run the candidate on the same device. Measure on the device classes that matter before setting promotion thresholds. A candidate should show a paired gain on the questions it can improve, preserve approved-text and citation behavior, and meet the chosen device budgets.
 
-Start with the two existing arms and fixture cases. Then parameterize the loader and add candidate preflight, followed by repeatable timing and reporting. Defer CI with a GPU runner, additional inference backends, and an in-product model picker until the benchmark establishes a need for them.
+Start with the two existing arms and fixture cases. Then parameterize the loader and add candidate preflight. Add the index builder and browser query path, then run the crossed comparison with repeatable timing and byte reporting. Defer CI with a GPU runner, additional inference backends, and an in-product model picker until the benchmark establishes a need for them.
