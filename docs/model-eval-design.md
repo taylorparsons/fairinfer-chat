@@ -2,9 +2,11 @@
 
 ## Decision
 
+Visitors should be able to chat about the website in the page widget. They can ask questions in their own words, follow up on an answer, or change topics. Replies use approved website content and link to the source. The visitor can ask another question from the same conversation.
+
 Add a local browser benchmark that runs the same questions through excerpt-only search, the Gemma 3 270M IT q4 release baseline, and one or more candidate models. Add a second comparison axis for lexical versus hybrid vector retrieval so retrieval gains can be measured separately from model selection. All arms use the installed `<site-chat>` widget, the same approved content, and the same rendering code, with retrieval held fixed when comparing selectors. A candidate earns consideration when it improves the passages users see and fits the startup, latency, and download budgets for the target devices.
 
-The first version targets WebGPU via the existing Transformers.js and ONNX Runtime Web stack. Compare one-pass excerpt selection with an optional three-call inference loop using the same model. The benchmark evaluates passage selection for Site Chat. The original FairInfer demo also generates creative drafts, which require a separate evaluation if they become part of the model decision.
+The first version targets WebGPU via the existing Transformers.js and ONNX Runtime Web stack. Compare one-pass excerpt selection with an optional three-call inference loop using the same model. The benchmark evaluates passage selection and grounded multi-turn conversation for Site Chat. The original FairInfer demo also generates creative drafts, which require a separate evaluation if they become part of the model decision.
 
 ## Why the existing harness needs an addition
 
@@ -88,11 +90,11 @@ Use the existing Transformers.js and ONNX Runtime Web stack for the query encode
 
 | Stage | Model output | JavaScript validation |
 | --- | --- | --- |
-| 1. Interpret | A bounded search query that preserves the user's intent. | Validate the response shape and length. Keep the original question for grounding and use it for retrieval if the rewrite is unusable. |
-| 2. Select | One passage ID from the shortlist or an explicit decline. | Run the configured retrieval mode on the search query. Take up to three ranked, approved passages. Send the original question and those passages to the selector. Validate the returned ID. |
-| 3. Evaluate | Accept, retry with a reason, or decline. | Give the evaluator the original question and the selected approved passage. Validate its verdict. On acceptance, render the approved excerpt and citation from the knowledge snapshot. |
+| 1. Interpret | A bounded, standalone question for retrieval, or a request to clarify an ambiguous reference. | Use the current message and bounded conversation context. Validate the response shape and length. Keep the original message for evaluation. Use it for retrieval when a rewrite is unusable and the turn is self-contained. |
+| 2. Answer | A short draft with passage IDs for each factual claim, or an explicit decline. | Run the configured retrieval mode on the standalone question. Pass up to three ranked, approved passages. Check that each cited ID belongs to this turn's shortlist before evaluating the draft. |
+| 3. Evaluate | Accept, retry with a reason, or decline. | Give the evaluator the draft, question, relevant context, and cited passages. Accept only if the verdict confirms that the passages support the claims and that the answer responds to the current turn. Resolve links from the approved snapshot and render plain text with citations. |
 
-The worker exposes distinct request types for interpretation, selection, and evaluation. Reuse the constrained choice contract for selection and validate every stage's response in JavaScript. Use request and attempt IDs to ignore stale results. Start the next stage only after the prior call settles and releases request-scoped resources. If retrieval produces no eligible passages, skip selection and use the retry or no-answer path.
+The worker exposes distinct request types for interpretation, drafting, and evaluation. Keep the constrained selection contract for the one-pass and excerpt-loop eval arms. Validate every stage's response in JavaScript, including the draft's claim-to-passage mapping. Model verification can miss unsupported claims, so score accepted drafts against independently labeled evidence in the eval. Use request and attempt IDs to ignore stale results. Start the next stage only after the prior call settles and releases request-scoped resources. If retrieval produces no eligible passages, skip selection and use the retry or no-answer path.
 
 ### Retry, progress, and resource handling
 
@@ -102,11 +104,32 @@ JavaScript ends the loop on cancellation, deadline, worker error, GPU device los
 
 ### Eval arms and acceptance
 
-Make the loop an opt-in eval arm. Pair it with one-pass excerpt selection using the same LLM revision, device, fixture, index, and lexical or hybrid retrieval configuration. The full loop can change the candidate list through query rewriting. To isolate the changes, also run a rewrite-plus-selection arm with no model evaluator, and an evaluation arm that consumes the same candidate lists and selected IDs as the one-pass baseline. Use the frozen held-out set to score the outcome independently of the model's verdict.
+Make the loop an opt-in eval arm. For the excerpt-loop comparison, configure the answer stage to return a constrained passage selection and the evaluation stage to verify that excerpt. Pair it with one-pass excerpt selection using the same LLM revision, device, fixture, index, and lexical or hybrid retrieval configuration. The full loop can change the candidate list through query rewriting. To isolate the changes, also run a rewrite-plus-selection arm with no model evaluator, and an evaluation arm that consumes the same candidate lists and selected IDs as the one-pass baseline. Use the frozen held-out set to score the outcome independently of the model's verdict.
 
-Report correct cited answers gained and lost on paired cases, shortlist recall before and after rewriting, evaluator false accepts and false rejects, recovery after retry, fallbacks, interruptions, and no-match outcomes. Measure actual stage calls, per-stage latency, median and p95 end-to-end latency, and completion and failure rates. Test normal completion, status before retry, cancellation, deadline exhaustion, invalid output, and a worker or GPU failure. Treat rendered unapproved text or mismatched citations as regressions.
+Report correct cited answers gained and lost on paired cases, shortlist recall before and after rewriting, evaluator false accepts and false rejects, recovery after retry, fallbacks, interruptions, and no-match outcomes. Measure actual stage calls, per-stage latency, median and p95 end-to-end latency, and completion and failure rates. Test normal completion, status before retry, cancellation, deadline exhaustion, invalid output, and a worker or GPU failure. Treat unsupported factual claims and mismatched citations as regressions in the conversational arm. In the excerpt arms, rendered answer text must match an approved passage.
 
 Add a separate routing model as a later eval arm if the single-model loop reveals a routing gap. Compare it against the same loop with the existing model and include its incremental download, startup time, and device impact.
+
+## Website conversation
+
+Keep a bounded history in the tab for follow-up references. Use recent user turns, verified assistant replies, and cited passage IDs as context. Treat conversation history as a reference for interpreting the next question. Retrieve approved evidence again for each factual reply. A topic change starts retrieval from the new question. A clear-chat control discards the conversation and cancels any pending turn. When the reference remains ambiguous, ask one focused clarifying question and wait for the visitor's reply. An unsupported question gets the existing no-match response with the site's contact link.
+
+Keep the excerpt-only path usable when optional models are disabled or unavailable. A visitor can still ask a standalone question and get a cited passage. When the conversational arm cannot verify a draft, render a cited excerpt only if that excerpt independently answers the resolved question. Use the no-match state or ask for clarification when the evidence is insufficient.
+
+### Conversation eval
+
+Run complete dialogues through the real widget. Preserve the same tab between turns in a dialogue and start each dialogue with cleared history. Add fixture expectations per turn for the intended meaning, accepted supporting passage IDs, required facts, and whether to answer, clarify, or decline. Check factual support and citation targets without requiring a fixed reply string. Keep fixture questions and answers in the eval suite so the product works with each site's reviewed content.
+
+| Dialogue | Expected behavior |
+| --- | --- |
+| Follow-up to the weekday day-pass price | Interpret “What about weekends?” using the earlier question. Cite the approved weekend price. |
+| Follow-up with two possible referents | Ask which item the visitor means. Use the next reply to resolve the reference before answering. |
+| Topic switch or factual correction | Use the new topic or detail and cite the corresponding passages. |
+| Unsupported follow-up after a sourced answer | Show the no-match state when the approved site content has no answer. |
+| Clear chat and repeat an elliptical question | Treat it as a new conversation and ask for the missing detail. |
+| Turn interrupted by cancellation or worker failure | Render no stale draft. Keep the next turn usable and record any excerpt fallback. |
+
+Compare one-pass excerpt selection, the three-stage excerpt loop, and the three-stage conversational arm with the same model and retrieval configuration. Report grounded follow-up accuracy, claim support, citation validity, clarification and decline accuracy, context carryover after topic switches, and per-turn latency. Use controlled replays of the same shortlist and excerpt ID to isolate evaluator behavior. Report the full conversational arm separately where the draft may cite more than one approved passage.
 
 ## Cases and scoring
 
